@@ -360,7 +360,7 @@ async function fetchNotionResponse(chunkQueue, notionRequestBody, headers, notio
     let response = null;
     // 发送请求
     if (ENABLE_PROXY_SERVER){
-      response = await fetch('http://127.0.0.1:10655/proxy', {
+      response = await fetch('http://0.0.0.0:10655/proxy', {
         method: 'POST',
         body: JSON.stringify({
           method: 'POST',

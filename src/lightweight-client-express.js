@@ -253,7 +253,7 @@ const PORT = process.env.PORT || 7860;
 initialize().then(() => {
   app.listen(PORT, () => {
     logger.info(`服务已启动 - 端口: ${PORT}`);
-    logger.info(`访问地址: http://localhost:${PORT}`);
+    logger.info(`访问地址: http://0.0.0.0:${PORT}`);
     
     if (INITIALIZED_SUCCESSFULLY) {
       logger.success(`系统初始化状态: ✅`);

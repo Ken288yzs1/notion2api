@@ -29,7 +29,10 @@
     "https-proxy-agent": "^7.0.2",
     "jsdom": "^22.1.0",
     "node-fetch": "^3.3.2",
-    "playwright": "^1.40.1"
+    "playwright": "^1.40.1",
+    "pino": "^9.1.0",         // <-- 新增的行
+    "pino-http": "^10.1.0",   // <-- 新增的行
+    "pino-pretty": "^11.0.0"  // <-- 新增的行
   },
   "devDependencies": {
     "nodemon": "^3.0.2"

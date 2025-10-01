@@ -1,0 +1,75 @@
+# .github/workflows/build_and_push.yml
+name: Build and Push Node.js Docker Image to Docker Hub
+
+on:
+  push:
+    tags:
+      - 'v*.*.*' # 触发：推送语义化版本标签 (例如 v1.0.0)
+  workflow_dispatch: # 触发：允许手动启动
+    inputs:
+      version:
+        description: '手动指定的版本/标签 (例如 my-test-build 或 v1.0.1-alpha)'
+        required: true # 手动触发时必须提供
+        type: string
+      update_latest:
+        description: '手动触发时是否也更新 latest 标签?'
+        required: false
+        type: boolean
+        default: false # 默认不更新 latest
+
+env:
+  # !!! 请修改这里为你 Docker Hub 的镜像名 !!!
+  IMAGE_NAME: ${{ secrets.DOCKERHUB_USERNAME }}/noti2
+
+jobs:
+  build-and-push: # Job 名称已更新，更具通用性
+    runs-on: ubuntu-latest
+
+    steps:
+      # 步骤 1: 检出代码
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # 步骤 2: 捕获手动输入的版本号 (如果触发方式是 manual)
+      - name: Set version (Manual Trigger)
+        if: github.event_name == 'workflow_dispatch'
+        id: manual_version
+        run: |
+          echo "version=${{ inputs.version }}" >> $GITHUB_OUTPUT
+
+      # 步骤 3: 登录到 Docker Hub
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # 步骤 4: 生成 Docker 镜像元数据 (标签和 Labels)
+      - name: Extract metadata (tags and labels) for Docker
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.IMAGE_NAME }}
+          tags: |
+            # 规则 1: 推送标签事件, 使用 Git 标签名 (例如 v1.0.0)
+            type=ref,event=tag
+            # 规则 2: 推送 v*.*.* 标签事件, 或手动触发且 update_latest=true, 则添加 'latest' 标签
+            type=raw,value=latest,enable=${{ startsWith(github.ref, 'refs/tags/v') || (github.event_name == 'workflow_dispatch' && inputs.update_latest) }}
+            # 规则 3: 手动触发事件, 使用手动输入的版本号
+            type=raw,value=${{ steps.manual_version.outputs.version }},enable=${{ github.event_name == 'workflow_dispatch' }}
+
+      # 步骤 5: 设置 Docker Buildx
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # 步骤 6: 构建 Docker 镜像并推送到 Docker Hub
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v6
+        with:
+          context: . # Docker 构建上下文为当前目录
+          file: ./Dockerfile # 指定用于构建的 Dockerfile
+          push: true # 推送到仓库
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

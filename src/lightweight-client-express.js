@@ -100,6 +100,8 @@ app.get('/v1/models', authenticate, (req, res) => {
       { id: "openai-gpt-4.1" },
       { id: "anthropic-opus-4" },
       { id: "anthropic-sonnet-4" },
+      { id: "anthropic-opus-4.1" },
+      { id: "anthropic-sonnet-alt" },
       { id: "anthropic-sonnet-3.x-stable" }
     ]
   };
